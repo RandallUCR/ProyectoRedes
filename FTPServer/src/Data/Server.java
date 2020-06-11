@@ -1,10 +1,12 @@
 package Data;
 
 import java.awt.Label;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -40,6 +42,7 @@ public class Server {
 						l.repaint();
 						enviar(aux, nuevo);
 						recibir(nuevo, aux);
+						//recibirPeticion(nuevo, aux);
 						clientes.add(aux);
 					}
 				} catch (IOException e) {
@@ -74,27 +77,32 @@ public class Server {
 			@Override
 			public void run() {
 				try {
-					Socket recibir = cliente;
-					ObjectInputStream flujoEntrada = new ObjectInputStream(recibir.getInputStream());
-					File file = (File) flujoEntrada.readObject();
-					String nombre = file.getName();
-					File newFile = new File("C:\\Users\\Randall\\Desktop\\FTP\\"+user+"\\"+nombre);
-					
-					FileInputStream input = new FileInputStream(file);
-					FileOutputStream output = new FileOutputStream(newFile);
-					
-					byte[] buffer = new byte[1024];
-					int length;
-					while((length = input.read(buffer))>0) {
-						output.write(buffer,0,length);
+					while(true) {
+						Socket recibir = cliente;
+						//recibirPeticion(cliente, user);
+						ObjectInputStream flujoEntrada = new ObjectInputStream(recibir.getInputStream());
+						File file = (File) flujoEntrada.readObject();
+						String nombre = file.getName();
+						File newFile = new File("C:\\Users\\Randall\\Desktop\\FTP\\"+user+"\\"+nombre);
+						
+						FileInputStream input = new FileInputStream(file);
+						FileOutputStream output = new FileOutputStream(newFile);
+						
+						byte[] buffer = new byte[1024];
+						int length;
+						while((length = input.read(buffer))>0) {
+							output.write(buffer,0,length);
+						}
+						input.close();
+						output.close();
+						System.out.println("Archivo recibido correctamente");
+						enviar(user, cliente);
+						//recibirPeticion(cliente, user);
 					}
-					input.close();
-					output.close();
-					System.out.println("Archivo recibido correctamente");
-					enviar(user, cliente);
+					
 					
 				}catch(IOException  | ClassNotFoundException e) {
-					System.out.println("El servidor no pudo recibir: "+e.getMessage());
+					System.out.println("El servidor no pudo recibir peticion de archivo: "+e.getMessage());
 				}
 				
 			}
@@ -111,6 +119,38 @@ public class Server {
 			System.out.println("Error recibiendo usuario: "+e.getMessage());
 		}
 		return salida;
+	}
+	
+	public void recibirPeticion(Socket cliente, String user) {
+		
+		//new Thread(new Runnable() {
+				
+			//@Override
+			//public void run() {
+				// TODO Auto-generated method stub
+				new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						try {
+							while(true) {
+								Socket recibir = cliente;
+								DataInputStream flujoEntrada = new DataInputStream(recibir.getInputStream());
+								String pedido = flujoEntrada.readUTF();
+								System.out.println(pedido);
+								File recuperado = new File("C:\\Users\\Randall\\Desktop\\FTP\\"+user+"\\"+pedido);
+								ObjectOutputStream flujoSalida = new ObjectOutputStream(recibir.getOutputStream());
+						        flujoSalida.writeObject(recuperado);
+							}
+						} catch (IOException e) {
+							System.out.println("xd "+e.getMessage());
+						}
+					}
+				}).start();
+					
+			//}
+		//}).start();
 	}
 
 	public ArrayList<String> getClientes() {

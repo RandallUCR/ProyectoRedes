@@ -12,10 +12,10 @@ public class Conexion {
 	private Connection conexion;
 	
 	public Conexion() {
-		host = "localhost";
-		user = "root";
-		pass = "";
-		db = "proyecto_redes";
+		host = "163.178.107.10";
+		user = "laboratorios";
+		pass = "UCRSA.118";
+		db = "proyecto_redes_B61776";
 		url = "jdbc:mysql://"+host+"/"+db;
 	}
 	
