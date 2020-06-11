@@ -35,15 +35,15 @@ public class GUI extends JFrame implements ActionListener{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private JButton iniciar, abrirArchivo, enviarArchivo;
-	private JLabel label;
+	private JButton iniciar, abrirArchivo, enviarArchivo, pedir;
+	private JLabel label, errorpedir;
 	private JTextField puerto, user, pass, archivo;
 	
 	private DefaultTableModel model;
 	private JTable tabla;
 	private JScrollPane scroll;
 	
-	private JFileChooser chooser;
+	private JFileChooser chooser,chooser2;
 	
 	private lnUsuarios ln;
 	private String nombre;
@@ -60,13 +60,16 @@ public class GUI extends JFrame implements ActionListener{
 		JPanel arriba = crearPanel(new FlowLayout(), Color.GRAY,0,80);
 		JPanel izquierda = crearPanel(new BorderLayout(), Color.DARK_GRAY,400,0);
 		JPanel centro = crearPanel(new FlowLayout(), new Color(185,183,183),0,0);
+		JPanel abajo = crearPanel(new FlowLayout(), Color.DARK_GRAY, 0, 50);
 		centro.setBorder(new EmptyBorder(250, 0, 0, 0));
 		
 		fondo.add(centro,BorderLayout.CENTER);
 		fondo.add(arriba,BorderLayout.PAGE_START);
 		fondo.add(izquierda, BorderLayout.LINE_START);
+		fondo.add(abajo, BorderLayout.PAGE_END);
 		
 		iniciar = crearBoton("Iniciar Cliente", Color.darkGray, Color.green);
+		pedir = crearBoton("Solicitar Archivo", Color.gray, Color.green);
 		iniciar.addActionListener(this);
 		puerto = crearTextField();
 		user = crearTextField();
@@ -115,6 +118,13 @@ public class GUI extends JFrame implements ActionListener{
 		centro.add(enviarArchivo);
 		
 		chooser = new JFileChooser();
+		chooser2 = new JFileChooser();
+		chooser2.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
+		//abajo.add(pedir);
+		errorpedir = crearLabel("", Color.RED, 15);
+		abajo.add(errorpedir);
+		pedir.addActionListener(this);
 		
 		this.add(fondo, BorderLayout.CENTER);
 	}
@@ -233,9 +243,21 @@ public void accionesChooser(JFileChooser c) {
 		if(c.showOpenDialog(this) == 0) {
 			File a = c.getSelectedFile();
 			archivo.setText(a.getPath());
+			
 		}
 		
 	}
+
+public void accionesChooser2(JFileChooser c, String ar) {
+	
+	if(c.showOpenDialog(this) == 0) {
+		File a = c.getSelectedFile();
+		cliente.enviarPeticion(ar);
+		errorpedir.setText(cliente.recibirArchivo(a.getPath()));
+		
+	}
+	
+}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -266,6 +288,16 @@ public void accionesChooser(JFileChooser c) {
 				cliente = new Cliente("localhost", Integer.parseInt(puerto.getText()), label);
 				cliente.enviarUser(nombre);
 				cargarTablaServer();
+			}
+		}
+		
+		if(pedir == e.getSource()) {
+			int fila = tabla.getSelectedRow();
+			if(fila > -1) {
+				String a = (String) model.getValueAt(fila, 0);
+				accionesChooser2(chooser2, a);
+			}else {
+				JOptionPane.showMessageDialog(null, "Seleccione una fila");
 			}
 		}
 	}
